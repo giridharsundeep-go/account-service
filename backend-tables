@@ -1,4 +1,4 @@
-user_account | CREATE TABLE `user_account` (
+CREATE TABLE `user_account` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -16,4 +16,18 @@ user_account | CREATE TABLE `user_account` (
   KEY `idx_email` (`email`),
   KEY `idx_phone` (`phone`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+CREATE TABLE `organisations` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `description` text,
+  `email` varchar(150) DEFAULT NULL,
+  `phone` varchar(15) DEFAULT NULL,
+  `user_id` bigint NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `organisations_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user_account` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 

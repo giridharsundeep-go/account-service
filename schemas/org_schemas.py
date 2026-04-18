@@ -5,3 +5,4 @@ class OrganisationSchema(Schema):
     description = fields.Str(required=False)
     email = fields.Email(required=True)
     phone = fields.Str(required=True)
+    user_id = fields.Int(required=True)

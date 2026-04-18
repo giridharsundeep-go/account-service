@@ -4,7 +4,13 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
-CORS(app)
+CORS(
+    app,
+    #resources={r"/api/*": {"origins": "*"}},  # change * to frontend URL in prod
+    supports_credentials=True,
+    #methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+   # allow_headers=["Content-Type", "Authorization"]
+)
 
 # JWT Config
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'

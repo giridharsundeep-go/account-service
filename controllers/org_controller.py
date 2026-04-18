@@ -16,7 +16,7 @@ org_schema = OrganisationSchema()
 
 
 # ✅ CREATE ORGANISATION (PROTECTED)
-@app.route('/api/organisation', methods=['POST'])
+@app.route('/api/organisation/create', methods=['POST'])
 @jwt_required()
 def create_organisation():
     json_data = request.get_json()
@@ -26,7 +26,6 @@ def create_organisation():
     except ValidationError as err:
         return message.error(err.messages, 400)
 
-    # ✅ Get user from JWT (SECURE)
     user_email = get_jwt_identity()
 
     # ⚠️ You must map email → user_id
@@ -34,9 +33,12 @@ def create_organisation():
     # For now assuming email = user_id OR you fetch it
 
     user_id = user_email  # 🔁 replace with actual lookup if needed
+    user = user_repo.get_user_by_email(user_id)
+    if not user.get('email') == user_id:
+        return message.error({'email': user_id}, 400)
 
     try:
-        org_id = org_repo.create_organisation(data, user_id)
+        org_id = org_repo.create_organisation(data, user.get('id'))
 
         return message.success({
             "id": org_id,
@@ -48,7 +50,7 @@ def create_organisation():
 
 
 # ✅ GET ORGANISATIONS (PROTECTED)
-@app.route('/api/organisations', methods=['GET'])
+@app.route('/api/organisations/get', methods=['GET'])
 @jwt_required()
 def get_user_orgs():
 
@@ -56,11 +58,30 @@ def get_user_orgs():
     user_id = user_email  # 🔁 map properly in real system
 
     user = user_repo.get_user_by_email(user_id)
-    if not user.get('email') != user_id:
+    if not user.get('email') == user_id:
         return message.error({'email': user_id}, 400)
 
     try:
-        orgs = org_repo.get_user_orgs(user.get('email'))
+        orgs = org_repo.get_user_orgs(user.get('id'))
+        return message.success(orgs)
+
+    except Exception as e:
+        return message.error(str(e), 500)
+
+# ✅ GET ORGANISATION (PROTECTED)
+@app.route('/api/organisation/get/${id}', methods=['GET'])
+@jwt_required()
+def get_user_orgs():
+
+    user_email = get_jwt_identity()
+    user_id = user_email  # 🔁 map properly in real system
+
+    user = user_repo.get_user_by_email(user_id)
+    if not user.get('email') == user_id:
+        return message.error({'email': user_id}, 400)
+
+    try:
+        orgs = org_repo.get_org(id)
         return message.success(orgs)
 
     except Exception as e:

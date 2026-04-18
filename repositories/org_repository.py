@@ -44,3 +44,20 @@ class OrganisationRepository:
         conn.close()
 
         return result
+
+    def get_org(self, id):
+        conn = self.db.get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+                   SELECT id, title, description, email, phone
+                   FROM organisations
+                   WHERE id = %s
+               """, (id,))
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return result
