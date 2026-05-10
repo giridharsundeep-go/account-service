@@ -6,3 +6,4 @@ class OrganisationSchema(Schema):
     email = fields.Email(required=True)
     phone = fields.Str(required=True)
     user_id = fields.Int(required=True)
+    address = fields.Str(required=True)

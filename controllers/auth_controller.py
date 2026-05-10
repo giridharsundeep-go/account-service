@@ -4,12 +4,12 @@ from flask_jwt_extended import create_access_token
 
 from main import app, bcrypt
 from database_connectivity import DatabaseConnectivity
-from repositories.user_repository import UserRepository
+from repositories.user_account_repository import UserAccountRepository
 from schemas.user_flow_schemas import SignupSchema, LoginSchema
 from api_messages import common_messages
 
 db = DatabaseConnectivity()
-user_repo = UserRepository(db)
+user_repo = UserAccountRepository(db)
 
 
 # ✅ SIGNUP
@@ -34,6 +34,7 @@ def signup():
     return common_messages.message.success(message="Account created successfully")
 
 
+
 # ✅ LOGIN
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -52,7 +53,6 @@ def login():
     if not bcrypt.check_password_hash(user['password'], data['password']):
         return common_messages.message.error("Invalid credentials", 401)
 
-    # ✅ JWT Token
     access_token = create_access_token(identity=user['email'])
 
     return common_messages.message.success({

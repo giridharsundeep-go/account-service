@@ -1,7 +1,7 @@
 from database_connectivity import DatabaseConnectivity
 
 
-class UserRepository:
+class UserAccountRepository:
     def __init__(self, db: DatabaseConnectivity):
         self.db = db
 

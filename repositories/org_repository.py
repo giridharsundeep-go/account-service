@@ -10,14 +10,15 @@ class OrganisationRepository:
         cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT INTO organisations (title, description, email, phone, user_id)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO org (title, description, email, phone, user_id, address)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             data.get('title'),
             data.get('description'),
             data.get('email'),
             data.get('phone'),
-            user_id   # ✅ from JWT (NOT request)
+            user_id,
+            data.get('address')
         ))
 
         conn.commit()
@@ -34,7 +35,7 @@ class OrganisationRepository:
 
         cursor.execute("""
             SELECT id, title, description, email, phone
-            FROM organisations
+            FROM org
             WHERE user_id = %s
         """, (user_id,))
 

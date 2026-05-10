@@ -5,13 +5,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from main import app
 from database_connectivity import DatabaseConnectivity
 from repositories.org_repository import OrganisationRepository
-from repositories.user_repository import UserRepository
+from repositories.user_account_repository import UserAccountRepository
 from schemas.org_schemas import OrganisationSchema
 from api_messages.common_messages import message
 
 db = DatabaseConnectivity()
 org_repo = OrganisationRepository(db)
-user_repo = UserRepository(db)
+user_repo = UserAccountRepository(db)
 org_schema = OrganisationSchema()
 
 
@@ -50,7 +50,7 @@ def create_organisation():
 
 
 # ✅ GET ORGANISATIONS (PROTECTED)
-@app.route('/api/organisations/get', methods=['GET'])
+@app.route('/api/organisation/get', methods=['GET'])
 @jwt_required()
 def get_user_orgs():
 
@@ -69,20 +69,23 @@ def get_user_orgs():
         return message.error(str(e), 500)
 
 # ✅ GET ORGANISATION (PROTECTED)
-@app.route('/api/organisation/get/${id}', methods=['GET'])
+@app.route('/api/organisation/get/<int:org_id>', methods=['GET'])
 @jwt_required()
-def get_user_orgs():
+def get_organisation(org_id):
 
     user_email = get_jwt_identity()
-    user_id = user_email  # 🔁 map properly in real system
 
-    user = user_repo.get_user_by_email(user_id)
-    if not user.get('email') == user_id:
-        return message.error({'email': user_id}, 400)
+    user = user_repo.get_user_by_email(user_email)
+    if not user or user.get('email') != user_email:
+        return message.error({'email': user_email}, 400)
 
     try:
-        orgs = org_repo.get_org(id)
-        return message.success(orgs)
+        org = org_repo.get_org(org_id)
+
+        if not org:
+            return message.error(f'Organisation with id {org_id} not found', 404)
+
+        return message.success(org)
 
     except Exception as e:
         return message.error(str(e), 500)
