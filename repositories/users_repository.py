@@ -7,30 +7,40 @@ class UsersRepository:
         self.db = db
 
     # ✅ CREATE USER
-    def create_user(self, user_id: int, name: str, email: str):
+    def create_user(self, user_id: int, role_id: int, name: str, email: str):
         query = """
-            INSERT INTO users (user_id, name, email)
-            VALUES (%s, %s, %s)
+            INSERT INTO users (user_id, role_id, name, email)
+            VALUES (%s, %s, %s, %s)
         """
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
         try:
-            cursor.execute(query, (user_id, name, email))
+            cursor.execute(query, (user_id, role_id, name, email))
             conn.commit()
             return cursor.lastrowid
         finally:
             cursor.close()
             conn.close()
 
-    # ✅ GET USERS BY USER (owner)
+    # ✅ GET USERS BY OWNER USER
     def get_users_by_user(self, user_id: int):
         query = """
-            SELECT id, user_id, name, email, created_at
-            FROM users
-            WHERE user_id = %s
-            ORDER BY created_at DESC
+            SELECT 
+                u.id,
+                u.user_id,
+                u.role_id,
+                u.name,
+                u.email,
+                r.name AS role_name,
+                u.created_at
+            FROM users u
+            LEFT JOIN roles r
+                ON u.role_id = r.id
+            WHERE u.user_id = %s
+            ORDER BY u.created_at DESC
         """
+
         conn = self.db.get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -44,10 +54,20 @@ class UsersRepository:
     # ✅ GET USER BY ID
     def get_user_by_id(self, id: int):
         query = """
-            SELECT id, user_id, name, email, created_at
-            FROM users
-            WHERE id = %s
+            SELECT 
+                u.id,
+                u.user_id,
+                u.role_id,
+                u.name,
+                u.email,
+                r.name AS role_name,
+                u.created_at
+            FROM users u
+            LEFT JOIN roles r
+                ON u.role_id = r.id
+            WHERE u.id = %s
         """
+
         conn = self.db.get_connection()
         cursor = conn.cursor(dictionary=True)
 
@@ -59,18 +79,20 @@ class UsersRepository:
             conn.close()
 
     # ✅ UPDATE USER
-    def update_user(self, id: int, name: str, email: str):
+    def update_user(self, id: int, role_id: int, name: str, email: str):
         query = """
             UPDATE users
-            SET name = %s,
+            SET role_id = %s,
+                name = %s,
                 email = %s
             WHERE id = %s
         """
+
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
         try:
-            cursor.execute(query, (name, email, id))
+            cursor.execute(query, (role_id, name, email, id))
             conn.commit()
             return cursor.rowcount
         finally:
@@ -83,6 +105,7 @@ class UsersRepository:
             DELETE FROM users
             WHERE id = %s
         """
+
         conn = self.db.get_connection()
         cursor = conn.cursor()
 

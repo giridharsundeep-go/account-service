@@ -25,6 +25,9 @@ def allow_options_requests():
 from controllers.auth_controller import *
 from controllers.org_controller import *
 from controllers.roles_controller import *
+from controllers.user_controller import *
+from controllers.teams_controller import *
+from controllers.team_members_controller import *
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
