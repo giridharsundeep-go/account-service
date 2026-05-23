@@ -12,10 +12,10 @@ db = DatabaseConnectivity()
 team_members_repo = TeamMembersRepository(db)
 
 
-# ✅ ADD MEMBER TO TEAM
+# ✅ ADD MULTIPLE MEMBERS TO TEAM (BULK ENROLLMENT)
 @app.route('/api/team-members/create', methods=['POST'])
 @jwt_required()
-def add_team_member():
+def add_team_members():
 
     try:
         user_email = get_jwt_identity()
@@ -27,7 +27,7 @@ def add_team_member():
         data = request.get_json()
 
         team_id = data.get('team_id')
-        user_id = data.get('user_id')
+        user_ids = data.get('user_ids')
 
         if not team_id:
             return message.error(
@@ -35,33 +35,29 @@ def add_team_member():
                 400
             )
 
-        if not user_id:
+        if not user_ids:
             return message.error(
-                {'error': 'user_id is required'},
+                {'error': 'user_ids list is required'},
                 400
             )
 
-        # ✅ CHECK DUPLICATE
-        exists = team_members_repo.team_member_exists(
-            team_id,
-            user_id
-        )
-
-        if exists:
+        if not isinstance(user_ids, list):
             return message.error(
-                {'error': 'User already exists in this team'},
-                409
+                {'error': 'user_ids must be a valid array list'},
+                400
             )
 
-        member_id = team_members_repo.add_team_member(
+        # Bulk register execution utilizing our optimized repository method
+        inserted_count = team_members_repo.add_team_members(
             team_id,
-            user_id
+            user_ids
         )
 
         return message.success({
-            'id': member_id,
+            'message': 'Team membership matrix processed successfully',
+            'inserted_count': inserted_count,
             'team_id': team_id,
-            'user_id': user_id
+            'user_ids': user_ids
         }, 201)
 
     except Exception as e:
@@ -130,10 +126,10 @@ def get_teams_by_user(user_id):
         )
 
 
-# ✅ REMOVE MEMBER FROM TEAM
+# ✅ REMOVE MULTIPLE MEMBERS FROM TEAM (BULK PRUNING)
 @app.route('/api/team-members', methods=['DELETE'])
 @jwt_required()
-def remove_team_member():
+def remove_team_members():
 
     try:
         user_email = get_jwt_identity()
@@ -145,7 +141,7 @@ def remove_team_member():
         data = request.get_json()
 
         team_id = data.get('team_id')
-        user_id = data.get('user_id')
+        user_ids = data.get('user_ids')
 
         if not team_id:
             return message.error(
@@ -153,27 +149,34 @@ def remove_team_member():
                 400
             )
 
-        if not user_id:
+        if not user_ids:
             return message.error(
-                {'error': 'user_id is required'},
+                {'error': 'user_ids list is required'},
                 400
             )
 
-        deleted = team_members_repo.remove_team_member(
+        if not isinstance(user_ids, list):
+            return message.error(
+                {'error': 'user_ids must be a valid array list'},
+                400
+            )
+
+        deleted = team_members_repo.remove_team_members(
             team_id,
-            user_id
+            user_ids
         )
 
         if deleted == 0:
             return message.error(
-                {'error': 'Team member not found'},
+                {'error': 'No matching team members found to remove'},
                 404
             )
 
         return message.success({
-            'message': 'Member removed successfully',
+            'message': 'Members removed successfully from the team target',
+            'deleted_count': deleted,
             'team_id': team_id,
-            'user_id': user_id
+            'user_ids': user_ids
         }, 200)
 
     except Exception as e:
@@ -201,7 +204,7 @@ def remove_all_team_members(team_id):
         )
 
         return message.success({
-            'message': 'All team members removed',
+            'message': 'All team members removed successfully',
             'deleted_count': deleted,
             'team_id': team_id
         }, 200)

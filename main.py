@@ -26,7 +26,7 @@ from controllers.auth_controller import *
 from controllers.org_controller import *
 from controllers.roles_controller import *
 from controllers.user_controller import *
-from controllers.teams_controller import *
+from controllers.teams_controller import teams_bp
 from controllers.team_members_controller import *
 
 if __name__ == '__main__':

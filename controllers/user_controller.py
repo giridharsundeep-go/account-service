@@ -15,7 +15,6 @@ users_repo = UsersRepository(db)
 @app.route('/api/user/create', methods=['POST'])
 @jwt_required()
 def create_user():
-
     try:
         user_email = get_jwt_identity()
         user = validators.UserFlowValidator.validate_email(user_email)
@@ -32,11 +31,34 @@ def create_user():
         if not email:
             return message.error({'error': 'email is required'}, 400)
 
+        # 🔧 Extract new organization and location metadata fields from payload
+        is_active = data.get('is_active', True)
+        employee_id_prefix = data.get('employee_id_prefix', '')
+        employee_id_number = data.get('employee_id_number')  # Keep as None if missing/null
+        manager_id = data.get('manager_id')  # Keep as None if missing/null
+
+        # Mapping frontend camelCase keys to backend snake_case local variables
+        location_country = data.get('locationCountry')
+        location_state = data.get('locationState')
+        location_city = data.get('locationCity')
+        location_work_model = data.get('locationWorkModel', 'HQ')
+        location_desk_code = data.get('locationDeskCode')
+
+        # Pass all 13 fields sequentially to match your UsersRepository signatures
         user_id = users_repo.create_user(
             user['id'],
             role_id,
             name,
-            email
+            email,
+            is_active,
+            employee_id_prefix,
+            employee_id_number,
+            manager_id,
+            location_country,
+            location_state,
+            location_city,
+            location_work_model,
+            location_desk_code
         )
 
         return message.success({
@@ -54,12 +76,11 @@ def create_user():
 @app.route('/api/user', methods=['GET'])
 @jwt_required()
 def get_users():
-
     try:
         user_email = get_jwt_identity()
         user = validators.UserFlowValidator.validate_email(user_email)
 
-        users = users_repo.get_users_by_user(user['id'])
+        users = users_repo.get_all_users()
 
         return message.success(users, 200)
 
@@ -71,7 +92,6 @@ def get_users():
 @app.route('/api/user/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
-
     try:
         user_email = get_jwt_identity()
         user = validators.UserFlowValidator.validate_email(user_email)
@@ -88,11 +108,33 @@ def update_user(user_id):
         if not email:
             return message.error({'error': 'email is required'}, 400)
 
+        # 🔧 Extract new fields for update operations as well
+        is_active = data.get('is_active', True)
+        employee_id_prefix = data.get('employee_id_prefix', '')
+        employee_id_number = data.get('employee_id_number')
+        manager_id = data.get('manager_id')
+
+        location_country = data.get('locationCountry')
+        location_state = data.get('locationState')
+        location_city = data.get('locationCity')
+        location_work_model = data.get('locationWorkModel', 'HQ')
+        location_desk_code = data.get('locationDeskCode')
+
+        # Ensure your users_repo.update_user signature accepts these extra positional arguments too!
         updated = users_repo.update_user(
             user_id,
             role_id,
             name,
-            email
+            email,
+            is_active,
+            employee_id_prefix,
+            employee_id_number,
+            manager_id,
+            location_country,
+            location_state,
+            location_city,
+            location_work_model,
+            location_desk_code
         )
 
         if updated == 0:
@@ -113,7 +155,6 @@ def update_user(user_id):
 @app.route('/api/user/<int:user_id>', methods=['DELETE'])
 @jwt_required()
 def delete_user(user_id):
-
     try:
         user_email = get_jwt_identity()
         user = validators.UserFlowValidator.validate_email(user_email)

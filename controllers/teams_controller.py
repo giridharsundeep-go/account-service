@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from main import app
@@ -6,6 +6,8 @@ from database_connectivity import DatabaseConnectivity
 from repositories.teams_repository import TeamsRepository
 from api_messages.common_messages import message
 from validators import validators
+
+teams_bp = Blueprint('teams', __name__)
 
 db = DatabaseConnectivity()
 teams_repo = TeamsRepository(db)
