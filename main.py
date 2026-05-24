@@ -28,6 +28,9 @@ from controllers.roles_controller import *
 from controllers.user_controller import *
 from controllers.teams_controller import teams_bp
 from controllers.team_members_controller import *
+from controllers.projects_controller import *
+from controllers.project_teams_controller import *
+from controllers.projects_individual_members_controller import *
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
