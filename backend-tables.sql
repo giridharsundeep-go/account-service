@@ -164,3 +164,25 @@ CREATE TABLE `project_teams` (
   KEY `idx_pt_user` (`user_id`),
   CONSTRAINT `fk_pt_project` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `products` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_products_user` (`user_id`),
+  CONSTRAINT `fk_products_user` FOREIGN KEY (`user_id`) REFERENCES `user_account` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+ALTER TABLE `projects`
+  ADD COLUMN `product_id` bigint NOT NULL AFTER `user_id`,
+  ADD KEY `fk_projects_product` (`product_id`),
+  ADD CONSTRAINT `fk_projects_product`
+    FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE;
+
+    select * from projects;
+    select * from project_individual_members;
