@@ -32,6 +32,10 @@ from controllers.projects_controller import *
 from controllers.project_teams_controller import *
 from controllers.projects_individual_members_controller import *
 from controllers.products_controller import *
+from controllers.sprints_controller import *
+from controllers.epics_controller import *
+from controllers.stories_controller import *
+from controllers.tasks_controller import *
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
