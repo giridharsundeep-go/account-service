@@ -22,6 +22,7 @@ def create_epic():
         data = request.get_json()
 
         project_id = data.get('project_id')
+        sprint_id = data.get('sprint_id')
         epic_code = data.get('epic_code')
         name = data.get('name')
         description = data.get('description')
@@ -29,19 +30,22 @@ def create_epic():
         # Defaulting creator to the session user if not explicitly passed in payload
         creator_user_id = data.get('creator_user_id', user['id'])
         assignee_user_id = data.get('assignee_user_id')
+        reporter_user_id = data.get('reporter_user_id')
         status = data.get('status', 'BACKLOG')
 
         if not project_id or not epic_code or not name:
-            return message.error({'error': 'project_id, epic_code, and name are required fields'}, 400)
+            return message.error({'error': 'project_id, sprint_id, epic_code, and name are required fields'}, 400)
 
         epic_id = epics_repo.create_epic(
             project_id=project_id,
+            sprint_id=sprint_id,
             user_id=user['id'],
             creator_user_id=creator_user_id,
             epic_code=epic_code,
             name=name,
             description=description,
             assignee_user_id=assignee_user_id,
+            reporter_user_id=reporter_user_id,
             status=status
         )
 
@@ -96,36 +100,43 @@ def update_epic(epic_id):
         user_email = get_jwt_identity()
         validators.UserFlowValidator.validate_email(user_email)
 
-        data = request.get_json()
+        # 1. Check if epic exists first
+        existing_epic = epics_repo.get_epic_by_id(epic_id)
+        if not existing_epic:
+            return message.error({'error': 'Epic not found'}, 404)
+
+        data = request.get_json() or {}
         name = data.get('name')
         description = data.get('description')
+        sprint_id = data.get('sprint_id')
         status = data.get('status')
         assignee_user_id = data.get('assignee_user_id')
+        reporter_user_id = data.get('reporter_user_id')
 
         if not name or not status:
             return message.error({'error': 'name and status are required fields'}, 400)
 
-        updated = epics_repo.update_epic(
+        # 2. Perform update
+        epics_repo.update_epic(
             epic_id=epic_id,
             name=name,
             description=description,
+            sprint_id=sprint_id,
             status=status,
-            assignee_user_id=assignee_user_id
+            assignee_user_id=assignee_user_id,
+            reporter_user_id=reporter_user_id
         )
-
-        if updated == 0:
-            return message.error({'error': 'Epic not found or no changes made'}, 404)
 
         return message.success({
             'id': epic_id,
             'name': name,
             'status': status,
-            'assignee_user_id': assignee_user_id
+            'assignee_user_id': assignee_user_id,
+            'reporter_user_id': reporter_user_id
         }, 200)
 
     except Exception as e:
         return message.error({'error': str(e)}, 500)
-
 
 # ✅ DELETE EPIC
 @app.route('/api/epics/<int:epic_id>', methods=['DELETE'])

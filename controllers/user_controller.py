@@ -24,6 +24,7 @@ def create_user():
         name = data.get('name')
         email = data.get('email')
         role_id = data.get('role_id')
+        profile_picture_url = data.get('profile_picture_url')  # Handled here
 
         if not name:
             return message.error({'error': 'name is required'}, 400)
@@ -31,25 +32,23 @@ def create_user():
         if not email:
             return message.error({'error': 'email is required'}, 400)
 
-        # 🔧 Extract new organization and location metadata fields from payload
         is_active = data.get('is_active', True)
-        employee_id_prefix = data.get('employee_id_prefix', '')
-        employee_id_number = data.get('employee_id_number')  # Keep as None if missing/null
-        manager_id = data.get('manager_id')  # Keep as None if missing/null
+        employee_id_prefix = data.get('employee_id_prefix', 'EMP')
+        employee_id_number = data.get('employee_id_number')
+        manager_id = data.get('manager_id')
 
-        # Mapping frontend camelCase keys to backend snake_case local variables
         location_country = data.get('locationCountry')
         location_state = data.get('locationState')
         location_city = data.get('locationCity')
         location_work_model = data.get('locationWorkModel', 'HQ')
         location_desk_code = data.get('locationDeskCode')
 
-        # Pass all 13 fields sequentially to match your UsersRepository signatures
         user_id = users_repo.create_user(
             user['id'],
             role_id,
             name,
             email,
+            profile_picture_url,
             is_active,
             employee_id_prefix,
             employee_id_number,
@@ -65,7 +64,8 @@ def create_user():
             'id': user_id,
             'name': name,
             'email': email,
-            'role_id': role_id
+            'role_id': role_id,
+            'profile_picture_url': profile_picture_url
         }, 201)
 
     except Exception as e:
@@ -78,10 +78,9 @@ def create_user():
 def get_users():
     try:
         user_email = get_jwt_identity()
-        user = validators.UserFlowValidator.validate_email(user_email)
+        validators.UserFlowValidator.validate_email(user_email)
 
         users = users_repo.get_all_users()
-
         return message.success(users, 200)
 
     except Exception as e:
@@ -94,13 +93,14 @@ def get_users():
 def update_user(user_id):
     try:
         user_email = get_jwt_identity()
-        user = validators.UserFlowValidator.validate_email(user_email)
+        validators.UserFlowValidator.validate_email(user_email)
 
         data = request.get_json()
 
         name = data.get('name')
         email = data.get('email')
         role_id = data.get('role_id')
+        profile_picture_url = data.get('profile_picture_url')
 
         if not name:
             return message.error({'error': 'name is required'}, 400)
@@ -108,9 +108,8 @@ def update_user(user_id):
         if not email:
             return message.error({'error': 'email is required'}, 400)
 
-        # 🔧 Extract new fields for update operations as well
         is_active = data.get('is_active', True)
-        employee_id_prefix = data.get('employee_id_prefix', '')
+        employee_id_prefix = data.get('employee_id_prefix', 'EMP')
         employee_id_number = data.get('employee_id_number')
         manager_id = data.get('manager_id')
 
@@ -120,12 +119,12 @@ def update_user(user_id):
         location_work_model = data.get('locationWorkModel', 'HQ')
         location_desk_code = data.get('locationDeskCode')
 
-        # Ensure your users_repo.update_user signature accepts these extra positional arguments too!
         updated = users_repo.update_user(
             user_id,
             role_id,
             name,
             email,
+            profile_picture_url,
             is_active,
             employee_id_prefix,
             employee_id_number,
@@ -138,13 +137,14 @@ def update_user(user_id):
         )
 
         if updated == 0:
-            return message.error({'error': 'User not found'}, 404)
+            return message.error({'error': 'User not found or no dataset changes identified'}, 404)
 
         return message.success({
             'id': user_id,
             'name': name,
             'email': email,
-            'role_id': role_id
+            'role_id': role_id,
+            'profile_picture_url': profile_picture_url
         }, 200)
 
     except Exception as e:
@@ -157,7 +157,7 @@ def update_user(user_id):
 def delete_user(user_id):
     try:
         user_email = get_jwt_identity()
-        user = validators.UserFlowValidator.validate_email(user_email)
+        validators.UserFlowValidator.validate_email(user_email)
 
         deleted = users_repo.delete_user(user_id)
 

@@ -1,5 +1,4 @@
 from flask import request
-from marshmallow import ValidationError
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from main import app
@@ -25,10 +24,11 @@ def create_story():
         title = data.get('title')
         description = data.get('description')
         epic_id = data.get('epic_id')
-        sprint_id = data.get('sprint_id')
+        sprint_id = data.get('sprint_id') or data.get('sprintId')
 
         creator_user_id = data.get('creator_user_id', user['id'])
         assignee_user_id = data.get('assignee_user_id')
+        reporter_user_id = data.get('reporter_user_id')
         story_points = data.get('story_points', 0)
         status = data.get('status', 'BACKLOG')
         priority = data.get('priority', 'MEDIUM')
@@ -41,6 +41,7 @@ def create_story():
             user_id=user['id'],
             creator_user_id=creator_user_id,
             assignee_user_id=assignee_user_id,
+            reporter_user_id=reporter_user_id,
             epic_id=epic_id,
             sprint_id=sprint_id,
             title=title,
@@ -53,7 +54,8 @@ def create_story():
         return message.success({
             'id': story_id,
             'title': title,
-            'status': status
+            'status': status,
+            'sprint_id': sprint_id
         }, 201)
 
     except Exception as e:
@@ -105,8 +107,9 @@ def update_story(story_id):
         status = data.get('status')
         priority = data.get('priority')
         epic_id = data.get('epic_id')
-        sprint_id = data.get('sprint_id')
+        sprint_id = data.get('sprint_id') or data.get('sprintId')
         assignee_user_id = data.get('assignee_user_id')
+        reporter_user_id = data.get('reporter_user_id')
 
         if not title or not status or not priority:
             return message.error({'error': 'title, status, and priority are required fields'}, 400)
@@ -120,7 +123,8 @@ def update_story(story_id):
             priority=priority,
             epic_id=epic_id,
             sprint_id=sprint_id,
-            assignee_user_id=assignee_user_id
+            assignee_user_id=assignee_user_id,
+            reporter_user_id=reporter_user_id
         )
 
         if updated == 0:
@@ -130,6 +134,7 @@ def update_story(story_id):
             'id': story_id,
             'title': title,
             'status': status,
+            'sprint_id': sprint_id,
             'story_points': story_points
         }, 200)
 

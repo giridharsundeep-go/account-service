@@ -2,9 +2,11 @@ from flask import Flask, make_response
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask import send_from_directory
+import os
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:4200"])
+CORS(app, origins=["http://localhost:4200", "http://127.0.0.1:4201"])
 
 # JWT Config
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
@@ -21,6 +23,8 @@ def allow_options_requests():
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         return response, 200
 
+
+
 #Register controllers
 from controllers.auth_controller import *
 from controllers.org_controller import *
@@ -36,6 +40,7 @@ from controllers.sprints_controller import *
 from controllers.epics_controller import *
 from controllers.stories_controller import *
 from controllers.tasks_controller import *
+import routes
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, threaded=True)

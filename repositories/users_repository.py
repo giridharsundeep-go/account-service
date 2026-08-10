@@ -13,6 +13,7 @@ class UsersRepository:
             role_id: int,
             name: str,
             email: str,
+            profile_picture_url: str | None,  # Added tracking column
             is_active: bool,
             employee_id_prefix: str,
             employee_id_number: str,
@@ -25,19 +26,19 @@ class UsersRepository:
     ):
         query = """
             INSERT INTO users (
-                user_id, role_id, name, email,
+                user_id, role_id, name, email, profile_picture_url,
                 is_active,
                 employee_id_prefix, employee_id_number, manager_id,
                 location_country, location_state, location_city, location_work_model, location_desk_code
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
         try:
             cursor.execute(query, (
-                user_id, role_id, name, email,
+                user_id, role_id, name, email, profile_picture_url,
                 int(is_active),  # Converted safely for tinyint columns
                 employee_id_prefix, employee_id_number, manager_id,
                 location_country, location_state, location_city, location_work_model, location_desk_code
@@ -48,7 +49,7 @@ class UsersRepository:
             cursor.close()
             conn.close()
 
-    # ✅ GET ALL USERS (New Master Fetch Method)
+    # ✅ GET ALL USERS
     def get_all_users(self):
         query = """
             SELECT 
@@ -57,6 +58,7 @@ class UsersRepository:
                 u.role_id,
                 u.name,
                 u.email,
+                u.profile_picture_url,
                 r.name AS role_name,
 
                 -- Extended Matrix Attributes
@@ -100,6 +102,7 @@ class UsersRepository:
                 u.role_id,
                 u.name,
                 u.email,
+                u.profile_picture_url,
                 r.name AS role_name,
 
                 -- Extended Matrix Attributes
@@ -144,6 +147,7 @@ class UsersRepository:
                 u.role_id,
                 u.name,
                 u.email,
+                u.profile_picture_url,
                 r.name AS role_name,
 
                 -- Extended Matrix Attributes
@@ -185,6 +189,7 @@ class UsersRepository:
             role_id: int,
             name: str,
             email: str,
+            profile_picture_url: str | None,
             is_active: bool,
             employee_id_prefix: str,
             employee_id_number: str,
@@ -200,6 +205,7 @@ class UsersRepository:
             SET role_id = %s,
                 name = %s,
                 email = %s,
+                profile_picture_url = %s,
                 is_active = %s,
                 employee_id_prefix = %s,
                 employee_id_number = %s,
@@ -217,7 +223,7 @@ class UsersRepository:
 
         try:
             cursor.execute(query, (
-                role_id, name, email,
+                role_id, name, email, profile_picture_url,
                 int(is_active),
                 employee_id_prefix, employee_id_number, manager_id,
                 location_country, location_state, location_city, location_work_model, location_desk_code,

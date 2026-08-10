@@ -1,19 +1,19 @@
 from flask import request
-from marshmallow import ValidationError
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from controllers.sprints_controller import sprints_repo
 from main import app
 from database_connectivity import DatabaseConnectivity
 from repositories.projects_repository import ProjectsRepository
+from repositories.sprints_repository import SprintsRepository
 from api_messages.common_messages import message
 from validators import validators
 
 db = DatabaseConnectivity()
 projects_repo = ProjectsRepository(db)
+sprints_repo = SprintsRepository(db)
 
 
-# ✅ CREATE PROJECT (Updated: Validates and injects product_id)
+# ✅ CREATE PROJECT
 @app.route('/api/projects/create', methods=['POST'])
 @jwt_required()
 def create_project():
@@ -28,9 +28,7 @@ def create_project():
         if not data.get('product_id'):
             return message.error({'error': 'product_id is required'}, 400)
 
-        # Inject validated user contexts directly into dictionary
         data['user_id'] = user['id']
-
         project_id = projects_repo.create_project(data)
 
         return message.success({
@@ -58,7 +56,7 @@ def get_projects():
         return message.error({'error': str(e)}, 500)
 
 
-# ✅ GET ALL PROJECTS BY PRODUCT SCOPE (New Endpoint)
+# ✅ GET ALL PROJECTS BY PRODUCT SCOPE
 @app.route('/api/products/<int:product_id>/projects', methods=['GET'])
 @jwt_required()
 def get_projects_by_product(product_id):
@@ -73,6 +71,7 @@ def get_projects_by_product(product_id):
         return message.error({'error': str(e)}, 500)
 
 
+# ✅ GET PROJECT BY ID (Includes Sprints and Teams/Users)
 @app.route('/api/projects/<int:project_id>', methods=['GET'])
 @jwt_required()
 def get_project_by_id(project_id):
@@ -80,21 +79,15 @@ def get_project_by_id(project_id):
         user_email = get_jwt_identity()
         validators.UserFlowValidator.validate_email(user_email)
 
-        # 1. Fetch the base project details
         project = projects_repo.get_project_by_id(project_id)
         if not project:
             return message.error({'error': 'Project not found'}, 404)
 
-        # Ensure project is a dictionary format we can mutate safely
         project_data = dict(project) if not isinstance(project, dict) else project.copy()
 
-        # 2. Fetch all Sprints tied to this project
-        # (Assuming sprints_repo has a get_sprints_by_project template)
         sprints = sprints_repo.get_sprints_by_project_id(project_id)
         project_data['sprints'] = [dict(s) for s in sprints] if sprints else []
 
-        # 3. Fetch Teams and Individual User Info assigned to this project workspace
-        # (Leverages a combined join query to get team structural layout + user identities)
         teams_and_users = projects_repo.get_project_teams_and_users(project_id)
         project_data['teams'] = teams_and_users if teams_and_users else []
 
@@ -104,7 +97,7 @@ def get_project_by_id(project_id):
         return message.error({'error': str(e)}, 500)
 
 
-# ✅ UPDATE PROJECT (Updated: Validates and updates product_id)
+# ✅ UPDATE PROJECT
 @app.route('/api/projects/<int:project_id>', methods=['PUT'])
 @jwt_required()
 def update_project(project_id):
@@ -120,7 +113,7 @@ def update_project(project_id):
         if not data.get('product_id'):
             return message.error({'error': 'product_id is required'}, 400)
 
-        existing_project = projects_repo.get_project_by_id(project_id)  # adjust method name to your repo
+        existing_project = projects_repo.get_project_by_id(project_id)
         if not existing_project:
             return message.error({'error': 'Project not found'}, 404)
 
